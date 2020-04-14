@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 public class PdfChecker {
 
+    String dniPatri = "";
     static String general_1_Path, general_2_Path, minus_1_Path, minus_2_Path;
 
     Hashtable<String, Float> general_1_List, general_2_List, minus_1_List, minus_2_List, totalGeneralList, totalMinusList;
@@ -49,7 +50,7 @@ public class PdfChecker {
 
     public Hashtable<String, Float> readPDF(String entryPath, String finalPath, char type) throws IOException {
 
-        Hashtable<String, Float> alumnList = new Hashtable<String, Float>();
+        Hashtable<String, Float> alumnList = new Hashtable<>();
         PDDocument document = PDDocument.load(new File(entryPath));
 
         if (!document.isEncrypted()) {
@@ -67,7 +68,7 @@ public class PdfChecker {
     }
 
     public Hashtable<String, Float> userFilter(String text, char type) {
-        Hashtable<String, Float> alumnList = new Hashtable<String, Float>();
+        Hashtable<String, Float> alumnList = new Hashtable<>();
         Pattern pattern = Pattern.compile("\\d{5,}");
         String[] lines = text.split(System.getProperty("line.separator"));
 
@@ -92,8 +93,8 @@ public class PdfChecker {
     private Hashtable<String, Float> combineSameType(Hashtable<String, Float> firstExam, Hashtable<String, Float> secondExam) {
         Hashtable<String, Float> total = new Hashtable<>();
 
-        Float firstResult = 0f;
-        Float secondtResult = 0f;
+        Float firstResult;
+        Float secondtResult;
 
         Set<String> keys = secondExam.keySet();
         for (String key : keys) {
@@ -116,7 +117,7 @@ public class PdfChecker {
 
         List<Map.Entry<String, Float>> list = new ArrayList<>(finalExam.entrySet());
 
-        list.sort(Comparator.comparing(Map.Entry::getValue));
+        list.sort(Map.Entry.comparingByValue());
         Collections.reverse(list);
 
         Map<String, Float> mapSortedByValues = new LinkedHashMap<>();
@@ -146,8 +147,13 @@ public class PdfChecker {
         nota = nota.replace(',', '.');
 
         String dni = "";
-        if (m.find())
+        if (m.find()) {
             dni = m.group(0);
+
+            if (dni.startsWith("0")) {
+                dni = dni.substring(1);
+            }
+        }
 
         alumno[0] = dni;
         alumno[1] = nota;
@@ -164,7 +170,9 @@ public class PdfChecker {
         nota = nota.replace(',', '.');
 
         String dni = fields[0].substring(0, fields[0].length() - 1);
-
+        if (dni.startsWith("0")) {
+            dni = dni.substring(1);
+        }
         alumno[0] = dni;
         alumno[1] = nota;
 
@@ -186,13 +194,13 @@ public class PdfChecker {
     }
 
     private void writeToFile(Map<String, Float> result, String path) throws IOException {
-        BufferedWriter writer = null;
+        BufferedWriter writer;
         StringBuilder res = new StringBuilder();
 
         Set<String> keys = result.keySet();
         int i = 1;
         for (String key : keys) {
-            if(key.equals("44253084"))
+            if (key.equals(dniPatri))
                 res.append("\t\t\t\t\t\t\t\t\t\t\t\t");
             res.append(i++).append(" - ").append(key).append("\t\t").append(result.get(key)).append("\n");
         }
